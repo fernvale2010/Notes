@@ -1,0 +1,112 @@
+
+
+$ git config --global user.name fernvale2010
+$ git config --global user.email lsonggee@yahoo.com
+
+
+https://github.com/fernvale2010/Notes.git
+
+
+create a new repository on the command line
+-----------------------------------------------
+echo "# Notes" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin https://github.com/fernvale2010/Notes.git
+git push -u origin master
+
+
+push an existing repository from the command line
+-----------------------------------------------
+git remote add origin https://github.com/fernvale2010/Notes.git
+git push -u origin master
+
+
+https://stackoverflow.com/questions/10573957/pushing-from-local-repository-to-github-hosted-remote
+--------------------------------------------------------------------------------------------------
+You push your local repository to the remote repository using the git push command after first 
+establishing a relationship between the two with the git remote add [alias] [url] command. 
+If you visit your Github repository, it will show you the URL to use for pushing. You'll first enter 
+something like:
+
+  git remote add origin git@github.com:username/reponame.git
+
+Unless you started by running git clone against the remote repository, in which case this step has 
+been done for you already.
+
+And after that, you'll type:
+
+  git push origin master
+
+After your first push, you can simply type:
+
+  git push
+
+when you want to update the remote repository in the future.
+
+
+-----------------------------------------------------------------------
+My steps:
+- create a folder in PC, 
+  e.g. c:\work
+
+- run git-bash.exe and cd to folder, e.g.
+  cd /c/work
+
+- copy files to folder
+
+- in git-bash, run
+  git init
+
+- add the files in folder to repo
+  git add .
+
+- commit
+  git commit -m "first commit"  <== "first commit" is the commit comment
+
+- check what branch we are in:
+  git branch  <== show show which branch, if no branches created, then default is master  
+  * master 
+  OR
+  git status
+  On branch master  <== show this
+
+- push to git repo
+  $ git push https://github.com/fernvale2010/Notes.git master
+  Counting objects: 11, done.
+  Delta compression using up to 4 threads.
+  Compressing objects: 100% (10/10), done.
+  Writing objects: 100% (11/11), 7.28 KiB | 2.43 MiB/s, done.
+  Total 11 (delta 0), reused 0 (delta 0)
+  To https://github.com/fernvale2010/Notes.git
+   * [new branch]      master -> master
+
+To Clone a repo:
+- create a folder, e.g.
+  c:\workTemp
+
+- cd into c:\workTemp
+
+- git init  <== maybe not needed
+
+- git clone https://github.com/fernvale2010/Notes.git
+  A Notes folder is created in c:\workTemp, with the repo files cloned..
+
+- cd into Notes folder
+
+- Can checkout/create new branches, etc
+  git checkout -b new_branch
+
+- Make changes, add new files, and do the:
+  git add .
+  git commit -m "whatever comments for the changes"
+  git push origin master
+
+
+
+
+
+
+
+
