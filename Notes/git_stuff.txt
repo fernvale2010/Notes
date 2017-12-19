@@ -101,7 +101,10 @@ To Clone a repo:
 - Make changes, add new files, and do the:
   git add .
   git commit -m "whatever comments for the changes"
-  git push origin master
+  git push origin master OR
+  git push origin new_branch
+
+  
 
 
 
