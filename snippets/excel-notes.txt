@@ -1,0 +1,41 @@
+
+
+https://superuser.com/questions/307496/how-can-i-set-excel-to-always-import-all-columns-of-csv-files-as-text/307498#307498
+
+
+
+https://superuser.com/questions/413226/why-does-excel-treat-long-numeric-strings-as-scientific-notation-even-after-chan
+------------------------------------------------------------------------------------------
+To prevent excel from displaying numbers in scientific notation, prepend the number with:
+=""&a1
+
+where a1 holds the numeric value. After, copy the column and paste to original column.
+
+explanation:-
+=  <= means formula
+"" <= empty string
+&  <= concatenate
+a1 is the cell, or in this case the number
+
+*** This way, the cell still can be used for arithematic..
+
+e.g. 
+1000100003699330 is displayed as 1.0001E+15, so change to
+=""&1000100003699330 and excel will display as 1000100003699330
+THIS IS NOT RELIABLE, excel will change last digit to 0..
+so, 1000100003699337 will be displayed as 1000100003699330..
+
+Another way is to prepend a '. ie, '1000100003699330, but in this case, excel will display as text, '1000100003699330
+
+Another way is to "tab" the number, e.g. in csv file
+,,	1000100003699330,
+   ^
+   | This is a tab
+
+*** Using tab, the cell cannot be used for arithematic
+
+Naga's recon app uses this, 
+="1009710024783146"
+
+
+
