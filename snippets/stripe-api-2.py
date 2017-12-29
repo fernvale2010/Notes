@@ -3,6 +3,7 @@ import stripe
 import json
 import sys
 import time
+import random
 
 
 #   print(json.dumps(c, sort_keys=True, indent=3, separators=(',', ': ')))
@@ -47,13 +48,22 @@ def retrieve_charge_objects(fromDate, toDate, num):
   return l
 
 
-
+def charge_customer(amt, src, desc, cust):
+  resp = stripe.Charge.create(
+    amount=amt,
+    currency="sgd",
+    source=src, # obtained with Stripe.js
+    description=desc,
+    customer=cust
+  )
+  print(resp)
 
 
 
 
 # TESTING FUNCTIONS
 #-------------------
+
 def test_stripe_api():
   print('\r\nretrieving customers:')
 
@@ -131,18 +141,76 @@ def test_own_stripe2(fr, to):
   for i in l.data:
     print(i['created'], ", utc=", time_epoch_to_utc(i['created']))    
 
+def test_charge_own(start, stop, src):
+  for i in range(start, stop):
+    desc = "customer {0}".format(i)
+    charge_customer(2000, src, desc)
+    time.sleep(2)
+
+
+def test_charge_own2(start, stop, src, cust):
+  random.seed()
+  for i in range(start, stop):
+    desc="item number {0}".format(i)
+    n = random.randrange(1,6)
+    try:
+      charge_customer(n*1000, src[n-1], desc, cust)
+    except stripe.error.CardError:
+      print("Oops! ", stripe.error.CardError)
+    time.sleep(n)
 
 
 # main()
 # -----------------
-test_own_stripe()
-print("\n")
-test_own_stripe2('2017-12-13 00:00:00', '2017-12-13 23:59:59')
-print("\n")
-test_own_stripe2('2017-12-14 00:00:00', '2017-12-14 23:59:59')
-print("\n")
-test_own_stripe2('2017-12-15 00:00:00', '2017-12-15 23:59:59')
-print("\n")
+token = ["tok_visa", "tok_sg", "tok_hk", "tok_au", "tok_be", "tok_it"]
+token2 = ["tok_visa_debit", "tok_mastercard", "tok_mastercard_debit", "tok_chargeDeclined", "tok_discover", "tok_diners"]
+token3 = ["tok_nl", "tok_jcb", "tok_avsFail", "tok_gb", "tok_ch", "tok_ru"]
+
+test_charge_own2(71, 90, token, None)
+time.sleep(50)
+test_charge_own2(91, 120, token2, None)
+
+
+
+
+# "tok_amex"
+
+
+
+
+
+# test_own_stripe()
+# print("\n")
+# test_own_stripe2('2017-12-13 00:00:00', '2017-12-13 23:59:59')
+# print("\n")
+# test_own_stripe2('2017-12-14 00:00:00', '2017-12-14 23:59:59')
+# print("\n")
+# test_own_stripe2('2017-12-15 00:00:00', '2017-12-15 23:59:59')
+# print("\n")
+
 # 1513330100  GMT: Friday, 15 December 2017 09:28:20
 # 1513134672  GMT: Wednesday, 13 December 2017 03:11:12
+
+
+# 260000.00                       
+# 266700.00 6700.00           
+# 273567.50 6867.50           
+# 280606.69 7039.19     45000.00                                100000.00 
+# 287821.85 7215.17     47200.00  2200.00   9415.17             104400.00 4400.00
+# 295217.40 7395.55     49488.00  2288.00   9683.55             108976.00 4576.00
+# 302797.84 7580.44     51867.52  2379.52   9959.96             113735.04 4759.04
+# 310567.78 7769.95     54342.22  2474.70   10244.65            118684.44 4949.40
+# 318531.98 7964.19     56915.91  2573.69   10537.88            123831.82 5147.38
+# 326695.28 8163.30     59592.55  2676.64   10839.94            129185.09 5353.27
+# 335062.66 8367.38     62376.25  2783.70   11151.08            134752.50 5567.40
+# 343639.22 8576.57     65271.30  2895.05   11471.62            140542.60 5790.10
+# 352430.20 8790.98     68282.15  3010.85   11801.83            146564.30 6021.70
+# 361440.96 9010.76     71413.44  3131.29   12142.04            152826.87 6262.57
+
+
+#08 10 12 14 16 18 20
+# 188000
+# 195920
+# 204156
+# 212723
 
