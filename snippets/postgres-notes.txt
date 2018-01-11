@@ -1,0 +1,406 @@
+
+psql command to clear screen:
+\! cls
+
+
+Prompts:
+--------
+postgres=#    ==> this is the normal prompt.. waiting for commands/queries.
+postgres'#    ==> means there is a missing ' quote.
+postgres-#    ==> means multiline statement, until we enter with ;
+postgres(#    ==> means missing a ) bracket.
+
+
+https://stackoverflow.com/questions/39928704/postgresql-removing-duplicates
+----------------------------------------------------------------------------
+Select duplicates:
+select can_id from trx2_stripe_ofts_matchstatus nu where exists (select * from trx2_stripe_ofts_matchstatus x where
+x.can_id = nu.can_id AND x.ctid < nu.ctid);
+
+
+select can_id from trx2_stripe_ofts_matchstatus nu where exists (select * from trx2_stripe_ofts_matchstatus x where
+x.can_id = nu.can_id AND x.stripe_id = nu.stripe_id and x.unmatched_type = nu.unmatched_type
+AND x.ctid < nu.ctid);
+
+
+delete from trx2_stripe_ofts_matchstatus nu where exists (select * from trx2_stripe_ofts_matchstatus x where
+x.can_id = nu.can_id AND x.stripe_id = nu.stripe_id and x.unmatched_type = nu.unmatched_type and nu.ptc == -1
+AND x.ctid < nu.ctid);
+
+
+
+if you want to SELECT unique rows:-
+SELECT * FROM ztable u
+WHERE NOT EXISTS (      -- There is no other record
+    SELECT * FROM ztable x
+    WHERE x.id = u.id   -- with the same id
+    AND x.ctid < u.ctid -- , but with a different(lower) "internal" rowid
+    );                  -- so u.* must be unique
+
+
+if you want to SELECT the other rows, which were suppressed in the previous query:-
+SELECT * FROM ztable nu
+WHERE EXISTS (           -- another record exists
+    SELECT * FROM ztable x
+    WHERE x.id = nu.id   -- with the same id
+    AND x.ctid < nu.ctid -- , but with a different(lower) "internal" rowid
+    );
+
+
+if you want to DELETE records, making the table unique (but keeping one record per id):-
+DELETE FROM ztable d
+WHERE EXISTS (          -- another record exists
+    SELECT * FROM ztable x
+    WHERE x.id = d.id   -- with the same id
+    AND x.ctid < d.ctid -- , but with a different(lower) "internal" rowid
+    );
+
+
+http://technobytz.com/most-useful-postgresql-commands.html
+----------------------------------------------------------
+Generalized query to delete duplicates: 
+DELETE FROM table_name WHERE ctid NOT IN (SELECT max(ctid) FROM table_name GROUP BY column1, [column 2,] ) ;
+
+
+
+
+
+npgsql:
+=======
+https://stackoverflow.com/questions/32158014/postgresql-parameterized-insert-with-ado-net
+-----------------------------------------------------------------------------------------
+Npgsql doesn't support _ as a parameter placeholder notation. You should be using @ or : (so @FirstName or :FirstName, not _FirstName).
+PostgreSQL will automatically lower-case your table and column names unless they are double-quoted. Either use lower-case names for 
+everything (simpler) or quote identifiers in your SQL queries.
+
+IDbCommand command = conn.CreateCommand();
+string sql = "INSERT INTO Customers (first_name, last_name) VALUES (@FirstName,@LastName)";
+command.CommandText = sql;
+
+var parameter = command.CreateParameter();
+parameter.ParameterName = "FirstName";
+parameter.Value = "Test";
+command.Parameters.Add(parameter);
+
+
+SharpDevelop: Package Management Console
+----------------------------------------
+View -> Tools -> Package Management Console
+
+e.g. https://github.com/bytefish/PostgreSQLCopyHelper
+To install PostgreSQLCopyHelper, run the following command in the Package Manager Console:
+PM> Install-Package PostgreSQLCopyHelper
+Attempting to resolve dependency 'Npgsql (≥ 3.1.0)'.
+Installing 'Npgsql 3.1.0'.
+Successfully installed 'Npgsql 3.1.0'.
+Installing 'PostgreSQLCopyHelper 1.2.0'.
+Successfully installed 'PostgreSQLCopyHelper 1.2.0'.
+Adding 'Npgsql 3.1.0' to CSVImport.
+Successfully added 'Npgsql 3.1.0' to CSVImport.
+Adding 'PostgreSQLCopyHelper 1.2.0' to CSVImport.
+Successfully added 'PostgreSQLCopyHelper 1.2.0' to CSVImport.
+PM> 
+
+
+
+
+https://www.techrepublic.com/blog/diy-it-guy/diy-a-postgresql-database-server-setup-anyone-can-handle/
+------------------------------------------------------------------------------------------------------
+Step 1: Install PostgreSQL
+++++++++++++++++++++++++++
+Here are the installation steps on Ubuntu (this installation will also work on any Debian-based distribution):
+
+Open a terminal window.
+Issue the command sudo apt-get install postgresql.
+Type the sudo password necessary to give you admin rights and hit Enter.
+Allow apt to pick up any necessary dependencies.
+Once the installation is complete, it's time to set this baby up.
+
+Step 2: Change the default user password
+++++++++++++++++++++++++++++++++++++++++
+Caution: If you don't follow this step, you will not be able to add databases and administer PostgreSQL, 
+and the database will not be secure.
+
+Here's how to change the password for the default user. The user in question is postgres, and the password 
+is changed like so:
+
+Open a terminal window.
+Issue the command sudo passwd postgres.
+Type (and confirm) that password to be used for this user.
+
+
+The postgres user will be the only user on your system that can open the PostgreSQL prompt without defining 
+a database, which means postgres is the only user who can administer PostgreSQL. To test this, change to the 
+postgres user with the command su - postgres and then enter the command psql. You should now be at the Postgres 
+prompt, which looks like:
+
+postgres=#
+
+All other users have to gain access to the prompt like so:
+
+psql DB_NAME
+
+where DB_NAME is the name of an existing database.
+
+
+Step 3: Change the Postgres admin password
++++++++++++++++++++++++++++++++++++++++++++
+The administrator password must be set; otherwise, external applications will not be able to communicate with the databases.
+
+To change the admin password for Postgres, follow these steps:
+
+Open a terminal window.
+Change to the postgres user.
+Log in to the postgres prompt.
+Issue the command \password postgres.
+Enter (and verify) the new password.
+Exit the prompt with the command \q.
+
+
+Step 4: Create your first database
+++++++++++++++++++++++++++++++++++++
+This is where it gets exciting. Let's create a new database called testdb. To do this, follow these steps:
+
+Open a terminal window.
+Change to the postgres user.
+Log in to the postgres prompt.
+Issue the command CREATE DATABASE testdb;.
+To make sure the database was successfully created, you should issue the command (from the postgres command prompt):
+
+\l
+You should see output similar to:
+
+testdb    | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 |
+Congratulations on creating your first PostgreSQL database!
+
+Step 5: Create users
+++++++++++++++++++++++++++
+Out of the box, the only user on your system who can connect to the databases is the postgres user. There may 
+be instances when third-party software needs to connect to the database server as a user other than the admin 
+user. In this case, that user will have to be created and given permission to use the database. Here's how you 
+can create users:
+
+Open a terminal window.
+Change to the postgres user.
+Log in to the postgres command prompt.
+Issue the command CREATE USER username; (where username is the name of the user you want to create).
+You can use the command \du to make sure the user was created. As you will see in the output, the user has no privileges. 
+Let's give the user privileges on the newly created database. Here's how:
+
+Open a terminal window.
+Change to the postgres user.
+Log in to the postgres prompt (using the testdb database) with the command psql testdb.
+Issue the command GRANT ALL PRIVILEGES ON DATABASE testdb TO user; (where user is the actual username to be given privileges).
+Now the newly created user has access to the database.
+
+Conclusion
+You now have a working (albeit empty) PostgreSQL database server ready to rock. It's powerful, it's flexible, 
+and best of all it's free. How's that for DIY?
+
+
+
+
+
+
+http://embeddedsystemengineering.blogspot.sg/2015/04/c-and-postgresql-using-npgsql-tutorial.html
+
+C# with npgsql:
+---------------
+Connection used:
+  	"Server=127.0.0.1;Port=5439;User Id=postgres;Password=postgres;Database=postgres;" // This after I set password to postgres..
+  	"Server=127.0.0.1;Port=5439;User Id=postgres;Database=postgres;"  // somehow, this also works.. looks like the password is not needed, in my setup..
+
+
+npgsql library used:
+	npgsql.3.1.0 - \lib\net45\Npgsql.dll  
+
+
+Snippets:
+        static void TestPostgresql()
+        {
+            //var connString = "Host=127.0.0.1;Port=5432;Username=postgres;Password=postgres;Database=postgres;";
+            var connString = "Server=127.0.0.1;Port=5439;User Id=postgres;Password=postgres;Database=postgres;";
+            // Server=XX.XX.XX.XX;Port=5433;User Id=XXXX;Password=XXXX;Database=XXXX;Pooling=true;
+            // MaxPoolSize=100;ConnectionLifeTime=15;Timeout=45;CommandTimeout=30;ApplicationName=ManagedAppServer;
+            // SearchPath=XXXXXX;
+
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                try
+                {
+                    conn.Open();
+
+                    //                // Insert some data
+                    //                using (var cmd = new NpgsqlCommand())
+                    //                {
+                    //                    cmd.Connection = conn;
+                    //                    cmd.CommandText = "INSERT INTO data (some_field) VALUES (@p)";
+                    //                    cmd.Parameters.AddWithValue("p", "Hello world");
+                    //                    cmd.ExecuteNonQuery();
+                    //                }
+
+                    // Retrieve all rows
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM trx2_details_src8;", conn))
+                        using (var reader = cmd.ExecuteReader())
+                            while (reader.Read())
+                                Console.WriteLine(reader.GetString(0));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            }
+        }
+
+
+
+To connect to dbase:
+--------------------
+- run the run.bat in PostgreSQL folder to startup the db server.
+
+- In another command window, run
+  psql -p 5439 -U postgres
+  initdb is called with "-U postgres" (and also env variables PGDATABASE, PGUSER are set to postgres. PGPORT is 5439)
+
+- Change password:
+  \password postgres
+  
+  HAVE changed password to postgres
+
+
+To create dbase with name 'todo':
+---------------------------------
+- createdb -p 5439 -U postgres todo
+
+
+
+psql commands:
+--------------
+\q 		- quit
+
+\conninfo	- view connection info
+  e.g. You are connected to database "postgres" as user "postgres" on host "localhost" at port "5439".
+
+\d Cars		- check the table/schema for Cars
+
+
+\c todo		- connect to database "todo".
+
+drop table "tablename"; 	- delete table.
+
+select current_timestamp;   - run function current_timestamp.
+
+
+Change column type from text to timestamp:-
+ALTER TABLE "TX_CSC_FINANCIAL" ALTER COLUMN txn_datetime TYPE timestamp USING txn_datetime::timestamp without time zone;
+
+If got this error:- (in this case, the date/time format is "11/20/2015 3:24:11 PM"),
+ERROR:  date/time field value out of range: "11/20/2015 3:24:11 PM"
+HINT:  Perhaps you need a different "datestyle" setting.
+
+So, change the datestyle to MDY..
+set datestyle to MDY;
+
+ALTER TABLE "TX_CSC_FINANCIAL" ALTER COLUMN txn_datetime TYPE timestamp USING txn_datetime::timestamp without time zone;
+ALTER TABLE
+
+
+queries: (case is not sensitive) !!!REMEMBER THE SEMI-COLON ;
+-------------------------------------------------------------
+CREATE TABLE Cars(Id INTEGER PRIMARY KEY, Name VARCHAR(20), Price INT);   <<< Note ';' at end
+INSERT INTO Cars VALUES(1,'Audi',52642);
+INSERT INTO Cars VALUES(2,'Mercedes',57127);
+INSERT INTO Cars VALUES(3,'Skoda',9000);
+INSERT INTO Cars VALUES(4,'Volvo',29000);
+INSERT INTO Cars VALUES(5,'Bentley',350000);
+INSERT INTO Cars VALUES(6,'Citroen',21000);
+INSERT INTO Cars VALUES(7,'Hummer',41400);
+INSERT INTO Cars VALUES(8,'Volkswagen',21600);
+
+
+
+SELECT * FROM Cars WHERE Id=3;
+  3 | Skoda |  9000
+
+
+Running a Script file:
+----------------------
+export PGPASSWORD=<password>   ==> If needed..
+psql -h <host> -d <database> -U <user_name> -p <port> -a -q -w -f <file>.sql
+
+NOTE: -q is suppress some printouts..
+
+
+
+
+https://stackoverflow.com/questions/38286105/importing-data-from-csv-in-postgresql
+----------------------------------------------------------------------------------
+I have a CSV file that contains 4000 columns and I need to import it to a postgres database. 
+I am using pgadminIII. In ORACLE SQL, there is an option where I can right click on the table 
+and import. Is there any similar way in Postgres. If not what is the most effective way to 
+create a table with so many columns?
+
+Update- I got it working:
+
+>>>>
+import pandas as pd
+df = pd.read_csv('C:/Users/dbharali0376/Desktop/Merge_N_Reorder/ip_merged_52_final.csv',dtype='unicode')
+df.columns = [c.lower() for c in df.columns] 
+from sqlalchemy import create_engine
+engine = create_engine('postgresql://postgres:password@localhost:5432/postgres')
+
+df.to_sql("trial", engine, if_exists='append',index=False)
+<<<<
+
+
+This creates a new table from the input csv.
+
+
+
+
+---------------------------------------------------------------------
+# This works for me..
+
+import pandas as pd
+
+
+df = pd.read_csv('20171212__OFTS Sample Data.csv')
+df.columns = [c.lower() for c in df.columns] 
+
+for i in df.columns:
+	print(i)
+
+
+from sqlalchemy import create_engine
+
+engine = create_engine('postgresql://postgres:postgres@localhost:5439/postgres')
+
+df.to_sql("trial", engine, if_exists='append',index=False)
+
+-----------------------------------------------------------------------
+
+- install WinPython-32bit-3.5.4.1Zero.exe
+- setup a batch file to run env_for_icons.bat
+  call <path-to-folder>\WinPython-32bit-3.5.4.1Zero\scripts\env_for_icons.bat
+- use pip to install some packages:
+  pip install numpy
+  pip install pytz
+  pip install pandas
+  pip install sqlalchemy
+- run the py script above for the CSV file
+- use psql and do a \d to view the tables, should see a "trial" table created.
+
+http://shichaoji.com/2016/10/10/database-python-connection-basic/
+https://stackoverflow.com/questions/20937538/how-to-display-pandas-dataframe-of-floats-using-a-format-string-for-columns
+
+
+
+
+ALTER DATABASE database_name SET datestyle TO "ISO, MDY";
+alter database postgres set datestyle to "ISO, MDY";
+
+To view only 1 row:
+-------------------
+select "CSC_APP_NO" from tx_csc_financial limit 1;
+
+
