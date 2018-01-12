@@ -1,0 +1,211 @@
+"A-no-B"  => in Stripe, not in OFTS
+"C-no-B"  => in CMCC, not in OFTS
+"B-no-AC" => in OFTS, not in CMCC and Stripe
+"BC-no-A" => in CMCC and OFTS, not in Stripe
+"AB-no-C" => in Stripe and OFTS, not in CMCC
+"MATCHED" => present in all 3.
+
+
+2 sets of data needed: #1 and #2
+
+1st run: 1 record in OFTS (B) missing, so this will result in:-
+  A (stripe) having A-no-B
+  C (CMCC) having C-no-B
+Use #1
+Remove ch_1BXntCGIu8nFXSFkroWL0Rf2, 1000100003691563 from OFTS sample.
+
+
+2nd run: Added missing OFTS (B) record, so that the previous A,C will be matched.
+Use #2
+Add ch_1BXntCGIu8nFXSFkroWL0Rf2, 1000100003691563 to OFTS sample.
+
+
+
+
+------------------------------------------------------------------
+
+TRUNC(to_date(c.MATCHED_ENTRY_DATE.Value.ToString("dd-MM-yy HH:mm:ss")
+
+TRUNC(to_date('01-01-01 00:00:00','dd-MM-yy HH24:mi:SS'))
+
+UPDATE trx2_stripe_ofts_matchstatus SET UNMATCHED_TYPE='BC-no-A', 
+MATCHED_ENTRY_DATE=DATE_TRUNC('day',to_date('01-01-01 00:00:00','dd-MM-yy HH24:mi:SS')) 
+WHERE CAN_ID='1000100003691563' AND PTC='5' AND AGENT_ID='204' AND 
+TRANSACTION_DATE_TIME=to_date('11-12-17 17:47:59','dd-MM-yy HH24:mi:SS')
+
+
+select transaction_date_time from trx2_stripe_ofts_matchstatus where can_id='1000100003691563' and
+TRANSACTION_DATE_TIME=to_timestamp('2017-12-11 17:47:59','yyyy-MM-dd HH24:mi:SS');
+
+
+select can_id from trx2_stripe_ofts_matchstatus nu where exists (select * from trx2_stripe_ofts_matchstatus x where
+x.can_id = nu.can_id AND x.ctid < nu.ctid);
+
+
+
+list in     list from table        table
+
+match       match                   match
+c-no-b      c-no-b                  c-no-b    
+match       match                   match
+bc-no-a (x) bc-no-a                 bc-no-a
+bc-no-a     bc-no-a                 bc-no-a
+match       match                   match
+c-no-b      c-no-b                  c-no-b
+a-no-b      a-no-b                  a-no-b -> updated to match
+
+
+
+Testing duplicate removal:
+--------------------------
+CSVObject_table: 
+
+.MapVarchar("Id", x => x.Id)
+.MapBigInt("CAN", x => x.CAN)
+.MapInteger("PTC", x => x.PTC)
+.MapDouble("Amount", x => x.Amount)
+.MapTimeStamp("TXN_Date", x => x.TXN_Date);
+
+// empty the table
+delete from csvobject_table;  
+
+// insert records
+INSERT INTO csvobject_table VALUES ('ID_AAAAAA1111', 1111111111, 10, 10.00, to_timestamp('20-01-17 00:00:00', 'dd-MM-yy HH24:mi:SS'));
+INSERT INTO csvobject_table VALUES ('ID_AAAAAA2222', 1111112222, -1, 10.00, to_timestamp('20-01-17 00:00:00', 'dd-MM-yy HH24:mi:SS'));
+INSERT INTO csvobject_table VALUES ('ID_AAAAAA3333', 1111113333, 10, 10.00, to_timestamp('20-01-17 00:00:00', 'dd-MM-yy HH24:mi:SS'));
+INSERT INTO csvobject_table VALUES ('ID_AAAAAA4444', 1111114444, 10, 10.00, to_timestamp('20-01-17 00:00:00', 'dd-MM-yy HH24:mi:SS'));
+INSERT INTO csvobject_table VALUES ('ID_AAAAAA2222', 1111112222, 10, 10.00, to_timestamp('20-01-17 00:00:00', 'dd-MM-yy HH24:mi:SS'));
+INSERT INTO csvobject_table VALUES ('ID_AAAAAA4444', 1111114444, 10, 10.00, to_timestamp('20-01-17 00:00:00', 'dd-MM-yy HH24:mi:SS'));
+INSERT INTO csvobject_table VALUES ('ID_AAAAAA4444', 1111114444, -1, 10.00, to_timestamp('20-01-17 00:00:00', 'dd-MM-yy HH24:mi:SS'));
+INSERT INTO csvobject_table VALUES ('ID_AAAAAA5555', 1111115555, -1, 10.00, to_timestamp('20-01-17 00:00:00', 'dd-MM-yy HH24:mi:SS'));
+
+select ctid, id, can, ptc from csvobject_table;
+
+// look for duplicates:
+select id, can, ptc from csvobject_table nu where exists (select * from csvobject_table x where
+x.id = nu.id AND x.can = nu.can AND x.ctid < nu.ctid);
+
+
+select nu.ctid,nu.id,nu.can,nu.ptc, x.ctid,x.id,x.can,x.ptc from csvobject_table nu, csvobject_table x where
+x.id = nu.id AND x.can = nu.can AND x.ctid < nu.ctid;
+
+
+
+
+
+select id, can, ptc from csvobject_table nu where not exists (select * from csvobject_table x where
+x.id = nu.id AND x.can = nu.can AND x.ctid < nu.ctid);
+
+
+delete from csvobject_table nu where exists (select * from csvobject_table x where
+x.id = nu.id AND x.can = nu.can and nu.ptc == -1 AND x.ctid < nu.ctid);
+
+DELETE FROM csvobject_table nu USING csvobject_table x
+WHERE  nu.ctid    < x.ctid       -- delete the "older" ones
+  AND  nu.id    = x.id       -- list columns that define duplicates
+  AND  nu.can = x.can;
+
+DELETE FROM csvobject_table nu USING csvobject_table x WHERE nu.ctid < x.ctid AND nu.id = x.id AND nu.can = x.can;
+
+
+
+DELETE FROM csvobject_table nu USING csvobject_table x WHERE nu.ctid < x.ctid AND nu.id = x.id AND nu.can = x.can and nu.ptc=-1;
+
+
+
+select * from csvobject_table nu where exists (select * from csvobject_table x where
+x.id = nu.id AND x.can = nu.can AND x.ctid <> nu.ctid);
+
+select * from csvobject_table where ptc < 0;
+
+
+
+                                                | need alias for subquery
+                                                V
+select * from (select * from csvobject_table) foo where ptc < 0;
+
+This works:-
+select * from (select * from csvobject_table nu where exists (select * from csvobject_table x where
+x.id = nu.id AND x.can = nu.can AND x.ctid <> nu.ctid)) foo where ptc < 0;
+
+This works also:-
+select * from (select * from csvobject_table nu where exists (select * from csvobject_table x where
+x.id = nu.id AND x.can = nu.can AND x.ctid <> nu.ctid)) foo where foo.ptc < 0;
+
+
+
+Works, delete duplicates where ptc < 0:- THIS DELETES ALL WITH PTC<0..
+delete from csvobject_table where ptc=ANY(select * from (select ptc from csvobject_table nu where exists 
+(select * from csvobject_table x where x.id = nu.id AND x.can = nu.can AND x.ctid <> nu.ctid)) foo where ptc < 0);
+
+Delete other duplicates:-
+DELETE FROM csvobject_table nu USING csvobject_table x WHERE nu.ctid < x.ctid AND nu.id = x.id AND nu.can = x.can;
+
+
+-----------------------------------------------------------------------------------------------------------------
+DELETE FROM trx2_stripe_ofts_matchstatus WHERE PTC=ANY(SELECT * FROM (SELECT PTC FROM trx2_stripe_ofts_matchstatus nu WHERE EXISTS
+(SELECT * FROM trx2_stripe_ofts_matchstatus x WHERE x.CAN_ID=nu.CAN_ID AND x.STRIPE_ID=nu.STRIPE_ID 
+AND x.UNMATCHED_TYPE=nu.UNMATCHED_TYPE AND x.ctid <> nu.ctid)) foo WHERE foo.PTC<0);
+
+
+
+select * from (select * from csvobject_table nu where exists (select * from csvobject_table x where
+x.id = nu.id AND x.can = nu.can AND x.ctid <> nu.ctid)) foo where ptc < 0;
+
+
+
+select * from (
+  SELECT *,
+  ROW_NUMBER() OVER(PARTITION BY id, can ORDER BY id asc) AS Row
+  FROM csvobject_table
+) dups
+where 
+dups.Row > 1 and ptc < 0
+
+select * from (
+  SELECT *,
+  ROW_NUMBER() OVER(PARTITION BY id, can ORDER BY id) AS Row
+  FROM csvobject_table
+) dups
+where 
+dups.Row > 1 and ptc < 0
+
+
+
+SELECT * FROM ( SELECT *, LEAD(row,1) OVER () AS nextrow FROM ( SELECT *, ROW_NUMBER() 
+OVER(w) AS row FROM csvobject_table WINDOW w AS (PARTITION BY id, can ORDER BY id) ) x ) y WHERE row > 1 OR nextrow > 1
+
+
+
+DELETE FROM masterparts
+WHERE partnom IN
+(SELECT * FROM (SELECT partnumber FROM nsncrossreference
+WHERE partnumber LIKE 'BAc%' AND COMPANY LIKE 'BOEING%') AS dt)
+
+
+SELECT * FROM ( SELECT *, LEAD(row,1) OVER () AS nextrow FROM ( SELECT *, ROW_NUMBER() 
+OVER(w) AS row FROM csvobject_table WINDOW w AS (PARTITION BY id, can ORDER BY id) ) x ) y WHERE (row > 1 OR nextrow > 1) and PTC < 0
+
+
+select * from csvobject_table
+where (can, ptc) in
+(SELECT can, ptc FROM (
+SELECT * FROM ( SELECT *, LEAD(row,1) OVER () AS nextrow FROM ( SELECT *, ROW_NUMBER() 
+OVER(w) AS row FROM csvobject_table WINDOW w AS (PARTITION BY id, can ORDER BY id) ) x ) y WHERE (row > 1 OR nextrow > 1) and PTC < 0
+) as dt)
+
+
+
+
+Step #1
+delete from csvobject_table
+where (can, ptc) in
+(SELECT can, ptc FROM (
+SELECT * FROM ( SELECT *, LEAD(row,1) OVER () AS nextrow FROM ( SELECT *, ROW_NUMBER() 
+OVER(w) AS row FROM csvobject_table WINDOW w AS (PARTITION BY id, can ORDER BY id) ) x ) y WHERE (row > 1 OR nextrow > 1) and PTC < 0
+) as dt)
+
+
+Step #2
+DELETE FROM csvobject_table nu USING csvobject_table x WHERE nu.ctid < x.ctid AND nu.id = x.id AND nu.can = x.can;
+
