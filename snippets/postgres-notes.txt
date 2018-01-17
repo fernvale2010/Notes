@@ -63,6 +63,110 @@ DELETE FROM table_name WHERE ctid NOT IN (SELECT max(ctid) FROM table_name GROUP
 
 
 
+delete from mytable where exists (select 1 from mytable t2
+where t2.name = mytable.name and t2.address = mytable.address and t2.zip = mytable.zip and
+t2.ctid > mytable.ctid);
+
+DELETE   from table_with_dups T1
+  USING       table_with_dups T2
+WHERE  T1.ctid    < T2.ctid       -- delete the "older" ones
+  AND  T1.name    = T2.name       -- list columns that define duplicates
+  AND  T1.address = T2.address
+  AND  T1.zipcode = T2.zipcode;
+
+
+SELECT * from table_with_dups T1
+  ,           table_with_dups T2
+WHERE  T1.ctid    < T2.ctid       -- select the "older" ones
+  AND  T1.name    = T2.name       -- list columns that define duplicates
+  AND  T1.address = T2.address
+  AND  T1.zipcode = T2.zipcode;
+
+
+
+
+https://www.postgresql.org/message-id/37013500.DFF0A64A@manhattanproject.com
+----------------------------------------------------------------------------
+This is a question I've seen a few times, and
+had to research, so I figured I'd share the
+answer.
+
+
+-------------------------------------------------
+
+
+drop table test;
+--
+create table test ( a text, b text );
+--  unique values
+insert into test values ( 'x', 'y');
+insert into test values ( 'x', 'x');
+insert into test values ( 'y', 'y' );
+insert into test values ( 'y', 'x' );
+-- duplicate values
+insert into test values ( 'x', 'y');
+insert into test values ( 'x', 'x');
+insert into test values ( 'y', 'y' );
+insert into test values ( 'y', 'x' );
+-- one more double duplicate
+insert into test values ( 'x', 'y');
+--
+select oid, a, b from test;
+--
+-- select duplicate rows
+--
+select o.oid, o.a, o.b from test o
+ where exists ( select 'x' 
+                  from test i
+                 where i.a = o.a
+                   and i.b = o.b
+                   and i.oid < o.oid
+             );
+--
+-- delete duplicate rows
+--
+-- Note: PostgreSQL dosn't support aliases on
+--       the table mentioned in the from clause
+--       of a delete.
+--
+ 
+delete from test 
+ where exists ( select 'x' 
+                  from test i
+                 where i.a = test.a
+                   and i.b = test.b
+                   and i.oid < test.oid
+             );
+--
+-- Let's see if it worked.
+--
+
+select oid, a, b from test;
+
+--
+-- Delete duplicates with respect to a only, ignoring
+-- the value in b.  Note, the first deletion leaves the 
+-- first oid with the unique values and removes subsequent
+-- ones, in this delete we reverse the direction of the <
+-- to save the last oid, and remove the previous ones.
+--
+
+delete from test 
+ where exists ( select 'x' 
+                  from test i
+                 where i.a = test.a
+                   and i.oid > test.oid
+             );
+
+--
+-- Let's see if it worked.
+--
+
+select oid, a, b from test;
+
+
+A WHERE clause filters the rows before they are grouped together. 
+A HAVING clause filters them after grouping.
 
 
 npgsql:
@@ -402,5 +506,67 @@ alter database postgres set datestyle to "ISO, MDY";
 To view only 1 row:
 -------------------
 select "CSC_APP_NO" from tx_csc_financial limit 1;
+
+
+Batch files to start/connect postgreSQL server:
+------------------------------------------------
+run.bat
+-------
+
+@ECHO ON
+REM The script sets environment variables helpful for PostgreSQL
+@SET PATH="%~dp0\App\PgSQL\bin";%PATH%
+@SET PGDATA=%~dp0\data
+@SET PGDATABASE=postgres
+@SET PGUSER=postgres
+@SET PGPORT=5439
+@SET PGLOCALEDIR=%~dp0\App\PgSQL\share\locale
+
+REM Check if data folder exists, if not, create it and do the initdb..
+IF EXIST "data" GOTO noinit
+mkdir data
+"%~dp0\App\PgSQL\bin\initdb" -U postgres -A trust
+
+:noinit
+"%~dp0\App\PgSQL\bin\pg_ctl" -D "%~dp0/data" -l logfile start
+ECHO "Click enter to stop"
+pause
+"%~dp0\App\PgSQL\bin\pg_ctl" -D "%~dp0/data" stop
+
+
+connect.bat
+-----------
+
+@SET PATH=c:\work\utils\PostgreSQL\App\PgSQL\bin\;%PATH%
+psql -p 5439 -U postgres
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
