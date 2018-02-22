@@ -1,0 +1,21 @@
+# prints duplicates
+# usage: gawk -F "," -f awkcmd.txt file.csv
+# To sort on e.g. CAN_ID (Column 3) of matched/unmatched reports, use:
+#   gawk -F "," -f awkcmd.txt file.csv | sort -t, +3   where -t, means delimiter is ","
+# To get lines with e.g. "AB1-no-CB2" or "CB2-no-AB1", use:
+#   gawk -F "," -f awkcmd.txt file.csv | grep -e "AB1-no-CB2" -e "CB2-no-AB1"
+#
+{
+  if (x[$3$4]) # anything in x[$3$4]?
+  { 
+    x_count[$3$4]++; # increment x_count[] corresponding to this $3$4
+    print $0;        # print current line
+    if (x_count[$3$4] == 1) 
+    { 
+      # print previously stored line, so if there are more similar (ie, $3$4 are same) lines, 
+      # it will not print previously stored line.. Otherwise will end up with double/triple prints..
+      print x[$3$4] 
+    } 
+  } 
+  x[$3$4] = $0  # store line
+}
