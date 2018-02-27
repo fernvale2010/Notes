@@ -1,0 +1,19 @@
+
+
+#1 - Earthmate LT-20 GPS USB Hid to USB Serial converter (STM32F4 discovery)
+#2 - PID motor, lego motor, tamiya bulldozer
+#3 - protothread
+#4 - rtos
+#5 - ringbuffer usb-cdc
+#6 - gps location tracking mqtt, esp8266
+#7 - timer rollover
+#8 - makefile projects
+#9 - dev environment
+#10 - usb stuff
+#11 - diy bluetooth gps 
+#12 - lwip/cyclonetcp stuff
+#13 - mindstorm nxt brain replacement.
+#14 - nrf24L10p remote, nrf51822 micro ESB
+#15 - amazon freertos, enc28j60
+
+
