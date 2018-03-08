@@ -1,0 +1,169 @@
+https://www.developerfusion.com/code/1976/deleting-duplicate-rows-in-a-table/
+=============================================================================
+
+Have you ever came across a situation where someone has entered duplicate data into a database table and 
+now the queries that you have written is bringing back bad data!
+
+Well, I don't know about you but I have been there and it is no fun!
+
+Here are a few pointers that can help you find the duplicate values in a table and delete those pesky 
+pieces of information.
+
+Lets say you have a table called Employees and its layout is as follows:
+
+create table employee
+( 
+  EmpId number,
+  EmpName varchar2(10),
+  EmpSSN varchar2(11)
+);
+
+insert into employee values(1, 'Jack', '555-55-5555');
+insert into employee values (2, 'Joe', '555-56-5555');
+insert into employee values (3, 'Fred', '555-57-5555');
+insert into employee values (4, 'Mike', '555-58-5555');
+insert into employee values (5, 'Cathy', '555-59-5555');
+insert into employee values (6, 'Lisa', '555-70-5555');
+insert into employee values (7, 'Jack', '555-55-5555');
+insert into employee values (8, 'Mike', '555-58-5555');
+insert into employee values (9, 'Cathy', '555-59-5555');
+insert into employee values (10, 'Lisa', '555-70-5555');
+insert into employee values (11, 'Lisa', '555-70-5555');
+
+You can see from the data inserted above that the EmpId is unique but the EmpName and EmpSSN have 
+duplicate values, so now you ask yourself, how in the world can I find these duplicates and remove them?
+
+Look no further as I will show you below one way of solving this problem.
+
+First off you will need to get an idea of what records are duplicate and by running the query below 
+it will help you figure that out:
+
+
+SQL> select count(empssn), empssn from employee
+      group by empssn
+        having count(empssn) > 1;
+
+COUNT(EMPSSN) EMPSSN
+------------- -----------
+            2 555-55-5555
+            2 555-58-5555
+            2 555-59-5555
+            3 555-70-5555
+
+From the above output you can now tell what employees have duplicate records and now you can move onto the 
+next step and remove them but still retain a unique record for the duplicate employees.
+
+Again here is a list all of the records in the table before we remove them.
+
+SQL> select * from employee;
+
+     EMPID EMPNAME    EMPSSN
+---------- ---------- -----------
+         1 Jack       555-55-5555
+         2 Joe        555-56-5555
+         3 Fred       555-57-5555
+         4 Mike       555-58-5555
+         5 Cathy      555-59-5555
+         6 Lisa       555-70-5555
+         7 Jack       555-55-5555
+         8 Mike       555-58-5555
+         9 Cathy      555-59-5555
+        10 Lisa       555-70-5555
+        11 Lisa       555-70-5555
+
+Now, let's get rid of those duplicate records by running this query:
+
+delete from employee
+  where (empid, empssn)
+    not in
+    ( select min(empid), empssn 
+         from employee group by empssn);
+
+After the above query has been executed lets select all the records from the table to see if indeed it actually worked:
+
+SQL> select * from employee;
+
+     EMPID EMPNAME    EMPSSN
+---------- ---------- -----------
+         1 Jack       555-55-5555
+         2 Joe        555-56-5555
+         3 Fred       555-57-5555
+         4 Mike       555-58-5555
+         5 Cathy      555-59-5555
+         6 Lisa       555-70-5555
+
+6 rows selected.
+
+BAM! Problem solved, no more duplicates, now finally you can go to bed and get some sleep. WAIT! Just 
+before you do, let me throw a little wrench into the situation, lets say that you have duplicate records 
+once again but this time the empids and empSSNs are the same.
+For example the data now looks like this:
+
+insert into employee values(1, 'Jack', '555-55-5555');
+insert into employee values (2, 'Joe', '555-56-5555');
+insert into employee values (3, 'Fred', '555-57-5555');
+insert into employee values (4, 'Mike', '555-58-5555');
+insert into employee values (5, 'Cathy', '555-59-5555');
+insert into employee values (6, 'Lisa', '555-70-5555');
+insert into employee values (1, 'Jack', '555-55-5555');
+insert into employee values (4, 'Mike', '555-58-5555');
+insert into employee values (5, 'Cathy', '555-59-5555');
+insert into employee values (6 ,'Lisa', '555-70-5555');
+insert into employee values (6, 'Lisa', '555-70-5555');
+
+Now, how can you figure out what data duplicate as now there is no unique identifier in the table. 
+The Ids are the same and the SSN are the same. This is just great!
+
+No problem, relax, there is actually a distinct value in the table but you can't see it. This little 
+helper is called the rowid.
+
+Remember there is nothing to uniquely identify the data as you can see by the above insert statements 
+so you will now have to rely on the rowid to get us out of this mess. In order to delete the duplicate 
+values in the employee table you will now need to write a query like this:
+
+ 
+delete from employee
+   where (rowid, empssn)
+    not in
+     (select min(rowid), empssn from employee group by empssn);
+
+And hence, after the delete query above has been executed your data will appear as:
+
+SQL> select * from employee
+  
+     EMPID EMPNAME    EMPSSN
+---------- ---------- -----------
+         1 Jack       555-55-5555
+         2 Joe        555-56-5555
+         3 Fred       555-57-5555
+         4 Mike       555-58-5555
+         5 Cathy      555-59-5555
+         6 Lisa       555-70-5555
+
+6 rows selected.
+
+As you can see all the duplicate values have been removed from the table and now you finally have unique 
+records in the table, so before you call it quits or before someone else slips in and enters more duplicate 
+data make sure you add a primary key to that EMPID or EMPSSN column so this wont happen again!
+
+Now finally, you will be able to get that long awaited sleep!
+
+IMPORTANT NOTE: Remember rowid will always uniquely identify a row in a table but please do not use this as 
+a primary key. I only showed you this little trick to help you get out of a bind when the database is poorly 
+designed by allowing duplicate data to be entered.
+
+I hope this has helped you out!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
