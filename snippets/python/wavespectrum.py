@@ -1,11 +1,14 @@
 # https://stackoverflow.com/questions/23377665/python-scipy-fft-wav-files
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from scipy.fftpack import fft
 from scipy.io import wavfile # get the api
 import wave, numpy as np
 import heapq
 import argparse
+
+
 
 # fs, data = wavfile.read('noise.wav') # load the data
 # a = data.T[0] # this is a two channel soundtrack, I get the first track
@@ -120,16 +123,12 @@ for k in dtmf_dict.keys():
     f = dtmf_dict.get(k)
     f.sort() # redundant, already sorted..
     print("standard=", f, "computed=", freq)
-    res = [abs(m - n) for m,n in zip(f,freq)]
+    res = [abs(m - n) for m,n in zip(f,freq)] # compute difference between measured and standard freq..
     # print(res)
     # if res[0] < 10 and res[1] < 10:
-    if all(x<10 for x in res):
+    if all(x<10 for x in res):  # computed difference < 10 => found the dtmf digit
         print("found - %s" % k)
         break
-
-
-    
-
 
 
 
@@ -141,11 +140,18 @@ for k in dtmf_dict.keys():
 # for i in range(250, 260, 1):
 #     print(abs(c[i]), fftfreq[i])
 
+ax = plt.axes()
+# xmarks=[i for i in range(int(min(abs(fftfreq))), int(max(abs(fftfreq))/2),1000)]
+# plt.xticks(xmarks)
 
-# plt.plot(abs(c[:d]), 'r') 
+ax.xaxis.set_major_locator(ticker.MultipleLocator(1000)) # big ticks
+ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))   # small ticks
 
-# plt.plot(fftfreq[1:d], abs(c[1:d]), 'Grey')
-# plt.show()
+# plt.xlim(min(abs(fftfreq)), max(abs(fftfreq))//2)
+
+# plt.plot(abs(c[:d]), 'Grey') 
+plt.plot(fftfreq[1:d], abs(c[1:d]), 'Grey')
+plt.show()
 
 
 
