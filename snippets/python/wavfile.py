@@ -6,7 +6,7 @@ import wave
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-
+import matplotlib.ticker as ticker
 
 if len(sys.argv) == 1:
     fname = "noise.wav"
@@ -18,14 +18,14 @@ wf = wave.open(fname, 'rb')
 nchannels = wf.getnchannels() # 1: mono, 2: stereo
 nbytesframe = wf.getsampwidth() # 1: unsigned byte, 2: signed int
 framerate = wf.getframerate() # no of samples per second
+nframes = wf.getnframes()
 
 if nbytesframe == 1:
        tp = np.uint8
 else:
        tp = np.int16
 
-N = framerate
-x = np.fromstring(wf.readframes(N), tp)
+x = np.fromstring(wf.readframes(nframes), tp)
 
 if nchannels == 1:
        xleft = x
@@ -57,7 +57,13 @@ max_nb_bit = float(2**(nb_bits-1))
 samples = xleft / (max_nb_bit + 1.0) 
 
 c = np.fft.fft(xleft)
+l = len(c)//2  # show only half-side
+fftfreq = np.fft.fftfreq(nframes, 1/framerate)
 
-plt.plot(c, 'r')
+ax = plt.axes()
+ax.xaxis.set_major_locator(ticker.MultipleLocator(1000)) # big ticks
+ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))   # small ticks
+
+plt.plot(fftfreq[:l], c[:l], 'Grey') # (x, y, colour)
 plt.show()
 

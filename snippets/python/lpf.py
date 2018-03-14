@@ -8,10 +8,10 @@ import sys
 import math
 import contextlib
 
-fname = 'test.wav'
+fname = 'noise.wav'
 outname = 'filtered.wav'
 
-cutOffFrequency = 400.0
+cutOffFrequency = 300.0
 
 # from http://stackoverflow.com/questions/13728392/moving-average-or-running-mean
 def running_mean(x, windowSize):

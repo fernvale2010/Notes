@@ -4,14 +4,14 @@ import random
 import wave, struct
 
 
-Fs = 800
-f = 50 # 50 hz
-sample = 800
+Fs = 8000
+f = 400 # 50 hz
+sample = 8000
 x = np.arange(sample)
-noise = 0.0008*np.asarray(random.sample(range(0,1000),sample))
+noise = (1/sample)*np.asarray(random.sample(range(0,sample),sample))
  
-y = 32767.0 * (np.sin(2 * np.pi * f * x / Fs)+noise)
-y1 = 32767.0 * (np.sin(2 * np.pi * f * x / Fs)) # clean signal
+y = 32767 * (np.sin(2 * np.pi * f * x / Fs) + noise)
+y1 = 32767 * np.sin(2 * np.pi * f * x / Fs) # clean signal
 
 wavef = wave.open('noise.wav','w')
 wavef.setnchannels(1) # stereo=2, mono=1
@@ -19,7 +19,8 @@ wavef.setsampwidth(2)
 wavef.setframerate(sample)
 
 for i in range(int(1 * sample)):
-    wavef.writeframesraw( struct.pack('<h', int(y[i])//2) )
+    k = int(y[i])//2
+    wavef.writeframesraw( struct.pack('<h', k) )
 
 # wavef.writeframes(b'\0')
 wavef.writeframes(b'')
@@ -32,7 +33,7 @@ wavef.setsampwidth(2)
 wavef.setframerate(sample)
 
 for i in range(int(1 * sample)):
-    wavef.writeframesraw( struct.pack('<h', int(y1[i])//2) )
+    wavef.writeframesraw( struct.pack('<h', int(y1[i])//2) ) # <h => little-endian, short integer
 
 # wavef.writeframes(b'\0')
 wavef.writeframes(b'')
@@ -42,10 +43,10 @@ wavef.close()
 
 
 
-# plt.plot(x, y)
-# plt.xlabel('voltage(V)')
-# plt.ylabel('sample(n)')
-# plt.show()
+plt.plot(x, y)
+plt.xlabel('voltage(V)')
+plt.ylabel('sample(n)')
+plt.show()
 
 
 
@@ -121,7 +122,7 @@ wavef.close()
 #
 
 
-# Wave files are unsigned for 8 bits samples, signed for 9 bits and above.
+# Wave files are unsigned for 8 bits samples, signed for 9 bits and above. In little-endian.. 
 
 
 # The sampling frequency (Fs) has to be at least twice the highest frequency component in the signal (whether you 
@@ -141,21 +142,34 @@ wavef.close()
 
 # https://stackoverflow.com/questions/7337709/why-do-i-need-to-apply-a-window-function-to-samples-when-building-a-power-spectr
 # I have found for several times the following guidelines for getting the power spectrum of an audio signal:
-
 # 1) collect N samples, where N is a power of 2
-
 # 2) apply a suitable window function to the samples, e.g. Hanning
-
 # 3) pass the windowed samples to an FFT routine - ideally you want a real-to-complex FFT but if all you have a 
 #    is complex-to-complex FFT then pass 0 for all the imaginary input parts
-
 # 4) calculate the squared magnitude of your FFT output bins (re * re + im * im)
-
 # 5) (optional) calculate 10 * log10 of each magnitude squared output bin to get a magnitude value in dB
-
 # Now that you have your power spectrum you just need to identify the peak(s), which should be pretty straightforward 
 # if you have a reasonable S/N ratio. Note that frequency resolution improves with larger N. For the above example of 
 # 44.1 kHz sample rate and N = 32768 the frequency resolution of each bin is 44100 / 32768 = 1.35 Hz.
+
+
+# https://learn.adafruit.com/fft-fun-with-fourier-transforms?view=all
+# Finally, the output of the FFT on real data has a few interesting properties:
+# The very first bin (bin zero) of the FFT output represents the average power of the signal. Be careful not to try 
+# interpreting this bin as an actual frequency value!
+# Only the first half of the output bins represent usable frequency values. This means the range of the output frequencies 
+# detected by the FFT is half of the sample rate. Don't try to interpret bins beyond the first half in the FFT output as 
+# they won't represent real frequency values!
+
+
+# https://www.mathworks.com/matlabcentral/answers/358151-low-pass-filter-in-matlab-python-for-removing-movement-noise
+# Begin by plotting the fft (link) of your signal. It will tell you what you need to know about the frequency content.
+# If the first (or 0 Hz) value is very high, subtract the mean of your signal from the rest of your signal before taking the Fourier transform:
+# FTsignal = fft(signal-mean(signal))/length(signal);
+
+# https://cocalc.com/share/7557a5ac1c870f1ec8f01271959b16b49df9d087/Kalman-and-Bayesian-Filters-in-Python/08-Designing-Kalman-Filters.ipynb?viewer=share
+# http://scottlobdell.me/2014/08/kalman-filtering-python-reading-sensor-input/
+
 
 
 

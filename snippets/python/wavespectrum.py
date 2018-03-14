@@ -23,6 +23,22 @@ import argparse
 # plt.plot(abs(c[:(d-1)]), frqLabel, 'r') 
 # plt.show()
 
+
+def find_dtmf(f1, f2):
+    freq = [int(f1), int(f2)]
+    freq.sort()
+    for k in dtmf_dict.keys():
+        f = dtmf_dict.get(k)
+        f.sort() # redundant, already sorted..
+        print("standard=", f, "computed=", freq)
+        res = [abs(m - n) for m,n in zip(f,freq)] # compute difference between measured and standard freq..
+        # print(res)
+        # if res[0] < 10 and res[1] < 10:
+        if all(x<10 for x in res):  # computed difference < 10 => found the dtmf digit
+            return k
+    return "No match"
+
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--input", required=True, help="input filename")
 args = vars(ap.parse_args())
@@ -73,7 +89,7 @@ samples = xleft / (max_nb_bit + 1.0)
 
 # b=[(ele/2**16.)*2-1 for ele in data] # 2 bytes (16 bit) per sample normalize to (-1,1)
 b = samples
-c = fft(b)
+c = rfft(b) # use the real number form
 d = len(c)//2
 
 k = np.arange(d)
@@ -81,14 +97,14 @@ T = len(k)/framerate  # where fs is the sampling frequency
 frqLabel = k/T 
 
 
-fftfreq = np.fft.fftfreq(nframes, 1/framerate)
+fftfreq = np.fft.rfftfreq(nframes, 1/framerate) # use the real number form
 
 
 hi = max(abs(c[1:d]))
 print(hi)
 print("bin 0 = ", abs(c[0]))
 
-highest = (heapq.nlargest(2, abs(c[1:d])))
+highest = (heapq.nlargest(2, abs(c[1:d]))) # find 2 largest elements from c[]
 print(highest)
 
 idx = []
@@ -116,21 +132,7 @@ freq2 = fftfreq[idx[1] + 1][0]
 print(abs(c[idx[0] + 1]), "freq = ", freq1) # need to +1 for c[] since the max search is on c[1:]
 print(abs(c[idx[1] + 1]), "freq = ", freq2)
 
-
-freq = [int(freq1), int(freq2)]
-freq.sort()
-for k in dtmf_dict.keys():
-    f = dtmf_dict.get(k)
-    f.sort() # redundant, already sorted..
-    print("standard=", f, "computed=", freq)
-    res = [abs(m - n) for m,n in zip(f,freq)] # compute difference between measured and standard freq..
-    # print(res)
-    # if res[0] < 10 and res[1] < 10:
-    if all(x<10 for x in res):  # computed difference < 10 => found the dtmf digit
-        print("found - %s" % k)
-        break
-
-
+# print("DTMF - %s" % find_dtmf(freq1, freq2)) # uncomment to find dtmf digit
 
 # print("\r\n")
 # for i in range(140, 150, 1):
@@ -145,12 +147,22 @@ ax = plt.axes()
 # plt.xticks(xmarks)
 
 ax.xaxis.set_major_locator(ticker.MultipleLocator(1000)) # big ticks
-ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))   # small ticks
+ax.xaxis.set_minor_locator(ticker.MultipleLocator(100))  # small ticks
 
-# plt.xlim(min(abs(fftfreq)), max(abs(fftfreq))//2)
+plt.xlim(min(abs(fftfreq)), max(abs(fftfreq))//2)
 
 # plt.plot(abs(c[:d]), 'Grey') 
-plt.plot(fftfreq[1:d], abs(c[1:d]), 'Grey')
+
+# color: 
+# 'tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan'
+#
+
+N = len(samples)
+# N = nframes
+normalization = 2 / N
+
+# plt.plot(samples, 'C0') 
+plt.plot(fftfreq[1:d], normalization * abs(c[1:d]), 'grey')
 plt.show()
 
 
