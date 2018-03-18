@@ -56,20 +56,47 @@ xhat = np.matrix([3])
 P    = np.matrix([1])
 
 
-kalman = []
-filter = KalmanFilterLinear(A,B,H,xhat,P,Q,R)
+kalmanAX = []
+filterAX = KalmanFilterLinear(A,B,H,xhat,P,Q,R)
+kalmanAY = []
+filterAY = KalmanFilterLinear(A,B,H,xhat,P,Q,R)
+kalmanAZ = []
+filterAZ = KalmanFilterLinear(A,B,H,xhat,P,Q,R)
 
-imu_channel = imu['acc_x'] # change this to check the other channels
-# imu_channel = imu['acc_y'] # change this to check the other channels
-# imu_channel = imu['acc_z'] # change this to check the other channels
-# imu_channel = imu['gyro_x'] # change this to check the other channels
-# imu_channel = imu['gyro_y'] # change this to check the other channels
-# imu_channel = imu['gyro_z'] # change this to check the other channels
+kalmanGX = []
+filterGX = KalmanFilterLinear(A,B,H,xhat,P,Q,R)
+kalmanGY = []
+filterGY = KalmanFilterLinear(A,B,H,xhat,P,Q,R)
+kalmanGZ = []
+filterGZ = KalmanFilterLinear(A,B,H,xhat,P,Q,R)
+
+imuAX = imu['acc_x'] # change this to check the other channels
+imuAY = imu['acc_y'] # change this to check the other channels
+imuAZ = imu['acc_z'] # change this to check the other channels
+imuGX = imu['gyro_x'] # change this to check the other channels
+imuGY = imu['gyro_y'] # change this to check the other channels
+imuGZ = imu['gyro_z'] # change this to check the other channels
 
 for i in x:
-    measured = imu_channel[i]
-    kalman.append(filter.GetCurrentState()[0,0])
-    filter.Step(np.matrix([0]),np.matrix([measured]))
+    measured = imuAX[i]
+    kalmanAX.append(filterAX.GetCurrentState()[0,0])
+    filterAX.Step(np.matrix([0]),np.matrix([measured]))
+    measured = imuAY[i]
+    kalmanAY.append(filterAY.GetCurrentState()[0,0])
+    filterAY.Step(np.matrix([0]),np.matrix([measured]))
+    measured = imuAZ[i]
+    kalmanAZ.append(filterAZ.GetCurrentState()[0,0])
+    filterAZ.Step(np.matrix([0]),np.matrix([measured]))
+    measured = imuGX[i]
+    kalmanGX.append(filterGX.GetCurrentState()[0,0])
+    filterGX.Step(np.matrix([0]),np.matrix([measured]))
+    measured = imuGY[i]
+    kalmanGY.append(filterGY.GetCurrentState()[0,0])
+    filterGY.Step(np.matrix([0]),np.matrix([measured]))
+    measured = imuGZ[i]
+    kalmanGZ.append(filterGZ.GetCurrentState()[0,0])
+    filterGZ.Step(np.matrix([0]),np.matrix([measured]))
+    
 
 fig, ax = plt.subplots()
 # ax.plot(x, imu_channel, 'grey')
@@ -87,34 +114,27 @@ fig, ax = plt.subplots()
 # plt.show()
 
 
-
-
-
-
-# https://stackoverflow.com/questions/3755059/3d-accelerometer-calculate-the-orientation
+# AN3461.pdf
+# roll=atan2(accy,sqrt(accx^2+accz^2))
+# pitch=atan2(accx,sqrt(accy^2+accz^2))
 def ComputeAngleFromAccelerometer(accX, accY, accZ):
-    R =  np.sqrt((accX**2) + (accY**2) + (accZ**2));
-    Arx = np.arccos(accX/R)*180/np.pi;
-    Ary = np.arccos(accY/R)*180/np.pi;
-    Arz = np.arccos(accZ/R)*180/np.pi; 
-    # You can multiply the result by (180/pi) to convert the magnitude to degrees. 
-    # If it's negative then you would have to add 360 to it afterwards (assuming you want a range of 0 to 360.)
-    rquad = -np.arctan2(accX/R, accZ/R)*180/np.pi;
-    yquad = -np.arctan2(accY/R, accZ/R)*180/np.pi;
-    return rquad, yquad
+    r = np.arctan2(accY , np.sqrt(accX * accX + accZ * accZ))*180/np.pi  # roll
+    p = np.arctan2(accX , np.sqrt(accY * accY + accZ * accZ))*180/np.pi # pitch
+    return r, p
 
 
 # [x**2 for x in range(10)]
 # [[c, a] for c, a in zip(cities, airports)]
-k = zip(imu['acc_x'], imu['acc_y'], imu['acc_z']) # k is iterator of tuples..
-roll, yaw = zip(*[ComputeAngleFromAccelerometer(x, y, z) for x,y,z in k]) # '*' means unzip the [(),(),..]
+# use filtered accelerometer values
+k = zip(kalmanAX, kalmanAY, kalmanAZ) # k is iterator of tuples..
+roll, pitch = zip(*[ComputeAngleFromAccelerometer(x, y, z) for x,y,z in k]) # '*' means unzip the [(),(),..]
 
-print(type(roll))
-print(roll[0])
+# print(type(roll)) # class tuple
+# print(roll[0])
 # [list(item) for item in t]
-np.savetxt('angles.csv', np.column_stack((np.asarray(roll), np.asarray(yaw))), fmt="%0.2f %0.2f", delimiter=',')
+np.savetxt('angles.csv', np.column_stack((np.asarray(roll), np.asarray(pitch))), fmt="%0.2f %0.2f", delimiter=',')
 
 ax.plot(x, roll, 'grey')
-ax.plot(x, yaw, 'blue')
+ax.plot(x, pitch, 'blue')
 plt.show()
 
