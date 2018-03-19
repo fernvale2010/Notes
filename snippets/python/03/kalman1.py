@@ -66,7 +66,7 @@ for i in range(numsteps):
     measured = voltmeter.GetVoltageWithNoise()
     measuredvoltage.append(measured)
     truevoltage.append(voltmeter.GetVoltage())
-    kalman.append(filter.GetCurrentState()[0,0])
+    kalman.append(filter.GetCurrentState()[0,0]) # access (row 0, col 0) element of matrix returned by GetCurrentState..
     filter.Step(numpy.matrix([0]),numpy.matrix([measured]))
 
 pylab.plot(range(numsteps),measuredvoltage,'b',range(numsteps),truevoltage,'r',range(numsteps),kalman,'g')
