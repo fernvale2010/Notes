@@ -132,7 +132,7 @@ roll, pitch = zip(*[ComputeAngleFromAccelerometer(x, y, z) for x,y,z in k]) # '*
 # print(type(roll)) # class tuple
 # print(roll[0])
 # [list(item) for item in t]
-np.savetxt('angles.csv', np.column_stack((np.asarray(roll), np.asarray(pitch))), fmt="%0.2f %0.2f", delimiter=',')
+np.savetxt('angles.csv', np.column_stack((np.asarray(roll), np.asarray(pitch))), fmt="%0.2f, %0.2f", delimiter=',')
 
 ax.plot(x, roll, 'grey')
 ax.plot(x, pitch, 'blue')
