@@ -1,4 +1,99 @@
 http://www.electronoobs.com/eng_robotica_tut6_1.php
 
 
+
+
+
+https://stackoverflow.com/questions/42700393/balancing-quadcopter-using-arduino
+-------------------------------------------------------------------------------
+Since its not provided, I am assuming that:
+
+The Loop time is atleast 4ms. (The less the better)
+The sensor noise is been reduced to an acceptable level.
+MPU-6050 needs gyro+accel data to be combined to get angles in degrees.
+If the above points are not taken care of, it will Not balance itself.
+
+Initially, you can get away without tuning kI. So let's focus on kP and kD:
+
+Keep increasing Kp till it starts oscillate fast. Keep the Kp value half of that.
+With kP set, start experimenting kD values, as it will try to dampen the overshoots of kP.
+Fiddle around these two values, tune it for perfection.
+Note, the more accurate your gyro data is, the higher you can set your kP to.
+
+
+
+https://robotics.stackexchange.com/questions/2964/quadcopter-pid-output
+-------------------------------------------------------------------------------
+Let's try to give a comprehensive answer and stay on topic!
+
+As you said in your question there is one PID per axis. This means 3 PIDs in total: 
+roll, pitch, and yaw.
+
+Also the motors input is a PWM high-level time, typically in the 1000-2000us range. 
+There are 4 motors input: front, back, left, and right. One subtlety of the motors is 
+that there is a value under which the motors stop completely, for instance 1100ms.
+
+There is another variable not mentioned in the question: the throttle.
+
+The first step in my quadcopter project was to tune the throttle. My throttle values 
+were between -100 and 100, so I applied the following formula to each motor: 
+motor = 300 * throttle / 100 + 1550. 
+The constant values are arbitrary and give us a motor value in the 1250-1850 range, 
+other values of the same magnitude would work.
+
+Only then do we apply the PIDs using the motor mix formula. For instance for my +4 quadcopter 
+the formula is:
+
+Front = Throttle + PitchPID - YawPID
+Back = Throttle - PitchPID - YawPID
+Left = Throttle + RollPID + YawPID
+Right = Throttle - RollPID + YawPID
+
+The PID output has no unit. Choosing the right P, I, and D constants shall give us values which 
+can stabilise the quadcopter. One caveat is that depending on the PID values the motor input can 
+exceed the bounds: it could go over 2000us or under 1100us (which is our example motor cut value). 
+In order to avoid such a situation we can analyse the higher and the lower of our motors inputs 
+and add a constant to get all the motors within bounds.
+
+For instance if the motor mix formula gave us:
+
+Front = 1900
+Back = 1800
+Left = 2100
+Right = 1700
+
+We would remove 100 from each motor and get:
+
+Front = 1800
+Back = 1700
+Left = 2000
+Right = 1600
+This would give us motors input values within bounds and maintain the difference between motors.
+
+As a side note you said in a comment that the thrust vs PWM input is not linear. This is true but 
+PIDs can drive non-linear systems with more or less success. For quadcopters the consensus is that 
+it works reasonably well :)
+
+If anything was unclear please let me know!
+
+Cheers, Marc.
+
+
+Are your example values correct? From what I've read, generally the PWM range goes from 1.0ms to 2.0ms 
+with 1.5ms being the stop value. Also, your throttle should go from -1 to +1 so your formula work and 
+not -100/+100. As for the system, where does the direction goes in your formula? I mean, besides the 
+throttle, we should indicate where to go (right, front, left or back). – FELIPE_RIBAS May 28 '14 at 4:41
+
+Yes, I meant microseconds (us) instead of milliseconds (ms). Also the throttle formula has a slight mistake. 
+I edited the original reply, thanks for pointing these out! The directions are given as PIDs inputs.
+A PID takes as an input a setpoint and a measured variable, and the error is calculated as setpoint - 
+measured variable. The setpoint comes from your sticks input. – marcv81 May 29 '14 at 9:26
+
+
+
+Usually, roll and pitch PIDs act on two motors at a time. Yaw PID act on all fours.
+
+
+
+
 https://github.com/fernvale2010/

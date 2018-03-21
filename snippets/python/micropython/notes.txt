@@ -1,0 +1,19 @@
+
+https://home-assistant.io/blog/2016/07/28/esp8266-and-micropython-part1/
+------------------------------------------------------------------------
+If you run into trouble, press “Ctrl+c” in the REPL to stop the execution of the code, 
+enter >>> import webrepl and >>> webrepl.start(), and upload your fixed file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
