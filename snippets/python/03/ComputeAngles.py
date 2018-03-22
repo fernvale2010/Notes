@@ -89,9 +89,10 @@ for i in range(1, len(imuAX)):
     rotation_x = get_x_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
     rotation_y = get_y_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
 
-    # //sg: complementary filter on accelerometer and gyro
+    # //sg: complementary filter on accelerometer and gyro, last_x, last_y, rotation_x, rotation_y are in degrees
     last_x = K * (last_x + gyro_x_delta) + (K1 * rotation_x)
     last_y = K * (last_y + gyro_y_delta) + (K1 * rotation_y)
     
+    #
     print("{0:.2f}, {1:.2f}, {2:.2f}, {3:.2f}, {4:.2f}, {5:.2f}".format((rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
 
