@@ -68,19 +68,47 @@ indexpage = """
   </div>
   <br><p><a href='http://www.projetsdiy.fr'>www.projetsdiy.fr</p>
   </div></div></div>
-  "</body></html>
+  </body></html>
 """
-
-
 
 urls = (
     '/', 'index'
 )
 
+
+app = web.application(urls, globals())
+render = web.template.render('templates/')
+
 class index:
     def GET(self):
-        return indexpage
+        return render.index()
+
 
 if __name__ == "__main__":
-    app = web.application(urls, globals())
     app.run()
+
+
+
+
+# https://stackoverflow.com/questions/37446843/web-py-error-loading-multiple-html-files-via-iframes
+#--------------------------------------------------------------------------------------------------
+# After digging through web.py documentation, all I needed to do was to provide file name with full path of 
+# html files in order to make them accessible via urls.
+# 
+# I thought I would post here in case anyone else runs into similar issue.
+# 
+# """ url definition""" 
+# urls = (
+#   '/path/to/files/index.html', 'do_index_frame',
+#   '/path/to/files/left.html', 'do_left_frame',
+#   '/path/to/files/right.html', 'do_right_frame',
+#   '/path/to/files/top.html', 'do_top_frame'
+# )
+
+
+
+
+
+
+
+
