@@ -1,3 +1,58 @@
+﻿
+https://robotics.stackexchange.com/questions/9022/the-logic-of-implementing-an-auto-level-function-in-a-pid-flight-controller
+------------------------------------------------------------------------------------------------------------------------
+A gyro gives angular velocity in degrees or radians per second.
+
+An accelerometer gives acceleration in feet or meters per second squared.
+
+The key to keeping a reference position is getting from an acceleration to a position. This is 
+done with by integrating the acceleration twice. The first integration gets from acceleration to 
+velocity, then the second integration gets from velocity to distance.
+
+So, if you were interested in implementing these integrations on a digital device, then you would 
+use numerical integration in a manner as follows:
+
+
+velocity = 0; % Set initial velocity
+position = 0; % Set initial position
+startTime = <get timer data>; 
+<main loop>
+    endTime = <get timer data>;
+    sampleTime = endTime - startTime;
+    startTime = endTime;
+
+    acceleration = <get accelerometer data>;
+    velocity = velocity + acceleration*sampleTime;
+    position = position + velocity*sampleTime;
+
+    positionProportionalError = positionReference - position;
+<loop>
+
+
+Once you have the positionProportionalError, you can integrate/derive the other two errors for 
+PID and use that for your PID control.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 http://www.electronoobs.com/eng_robotica_tut6_1.php
 
 
