@@ -35,6 +35,10 @@ def wipe():
         curpath = ".\\"
     else:
         curpath = sys.argv[1]
+        print(curpath)
+    ans = input("Are you sure? ")
+    if ans == 'N' or ans == 'n':
+        return
     for root, _, files in os.walk(curpath):
         for f in files:
             fname = os.path.join(root, f)
